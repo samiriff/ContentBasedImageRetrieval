@@ -54,11 +54,11 @@ public class ImageCollection
 	private int computeEuclideanDistance(ImageData image, ImageData queryImage)
 	{
 		int euclideanDistance = 0;
-		for(int r = 0; r < UserVariables.NUM_RED_BINS; r++)
+		for(int r = 0; r < UserVariables.getRedBin(); r++)
 		{
-			for(int g = 0; g < UserVariables.NUM_GREEN_BINS; g++)
+			for(int g = 0; g < UserVariables.getGreenBin(); g++)
 			{
-				for(int b = 0; b < UserVariables.NUM_BLUE_BINS; b++)
+				for(int b = 0; b < UserVariables.getBlueBin(); b++)
 				{
 					String rgbBin = "" + r + "," + g + "," + b;
 					euclideanDistance += Math.abs(image.getValueFromHistogram(rgbBin) - queryImage.getValueFromHistogram(rgbBin));

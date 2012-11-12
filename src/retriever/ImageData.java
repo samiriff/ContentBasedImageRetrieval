@@ -55,9 +55,9 @@ public class ImageData
 		for(int i=0; i<pixelArray.length; i++)
 			for(int j=0; j<pixelArray[0].length; j++)
 			{
-				quantizedRed[i][j] = (int)(GImage.getRed(pixelArray[i][j]) / (float)(256 / UserVariables.NUM_RED_BINS));
-				quantizedGreen[i][j] = (int)(GImage.getGreen(pixelArray[i][j]) / (float)(256 / UserVariables.NUM_GREEN_BINS));
-				quantizedBlue[i][j] = (int)(GImage.getBlue(pixelArray[i][j]) / (float)(256 / UserVariables.NUM_BLUE_BINS));
+				quantizedRed[i][j] = (int)(GImage.getRed(pixelArray[i][j]) / (float)(256 / UserVariables.getRedBin()));
+				quantizedGreen[i][j] = (int)(GImage.getGreen(pixelArray[i][j]) / (float)(256 / UserVariables.getGreenBin()));
+				quantizedBlue[i][j] = (int)(GImage.getBlue(pixelArray[i][j]) / (float)(256 / UserVariables.getBlueBin()));
 			}		
 	}
 	

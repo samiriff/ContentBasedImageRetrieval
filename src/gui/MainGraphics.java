@@ -31,6 +31,7 @@ public class MainGraphics extends GraphicsProgram
 	private JTextField sliderLabels[] = new JTextField[3];
 	
 	private ImageData queryImage;
+	private ImageCollection imageCollection = null;
 	
 	public void init()
 	{
@@ -66,7 +67,7 @@ public class MainGraphics extends GraphicsProgram
             public void stateChanged(ChangeEvent e) 
             {
             	sliderLabels[0].setText(String.valueOf(sliders[0].getValue()));	
-            	UserVariables.NUM_RED_BINS = sliders[0].getValue();
+            	UserVariables.setRedBin(sliders[0].getValue());
             }
         });
 		sliders[1].addChangeListener(new ChangeListener() {
@@ -74,7 +75,7 @@ public class MainGraphics extends GraphicsProgram
             public void stateChanged(ChangeEvent e) 
             {
             	sliderLabels[1].setText(String.valueOf(sliders[1].getValue()));	    
-            	UserVariables.NUM_GREEN_BINS = sliders[1].getValue();
+            	UserVariables.setGreenBin(sliders[1].getValue());
             }
         });
 		sliders[2].addChangeListener(new ChangeListener() {
@@ -82,14 +83,14 @@ public class MainGraphics extends GraphicsProgram
             public void stateChanged(ChangeEvent e) 
             {
             	sliderLabels[2].setText(String.valueOf(sliders[2].getValue()));	 
-            	UserVariables.NUM_BLUE_BINS = sliders[2].getValue();
+            	UserVariables.setBlueBin(sliders[2].getValue());
             }
         });
 	}
 	
 	public void run()
 	{			
-		
+		System.out.println(Runtime.getRuntime().maxMemory());
 	}
 	
 	public void actionPerformed(ActionEvent e) 
@@ -121,12 +122,15 @@ public class MainGraphics extends GraphicsProgram
 	   
 	   if(e.getSource() == runButton)
 	   {			    
-		    ImageCollection imageCollection = new ImageCollection("images");
-			ArrayList<ImageData> targets = imageCollection.computeNearestTarget(queryImage);
-			
-			System.out.println("TARGETS");
-			
-			displayImages(targets, 6);	
+		   if(imageCollection == null || UserVariables.hasChanged())
+		   {
+			   imageCollection = new ImageCollection("images");		
+			   UserVariables.resetChanged();
+		   }
+		   
+		   ArrayList<ImageData> targets = imageCollection.computeNearestTarget(queryImage);			
+		   System.out.println("TARGETS");			
+		   displayImages(targets, 6);	
 	   }	   
 	}
 	
