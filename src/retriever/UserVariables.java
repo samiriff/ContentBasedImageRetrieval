@@ -8,6 +8,10 @@ public class UserVariables
 	
 	private static boolean changed;
 	
+	private static int NUM_SIMILAR_IMAGES = 6;
+	
+	public static boolean USE_CSFD_ALGORITHM = false;
+	
 	public static boolean hasChanged()
 	{
 		return changed;
@@ -49,6 +53,16 @@ public class UserVariables
 	public static int getBlueBin()
 	{
 		return NUM_BLUE_BINS;
+	}
+	
+	public static int getNumOfSimilarImages()
+	{
+		return NUM_SIMILAR_IMAGES;
+	}
+
+	public static void setNumOfSimilarImages(int num)
+	{
+		NUM_SIMILAR_IMAGES = num;
 	}
 
 }

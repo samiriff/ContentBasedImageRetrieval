@@ -1,10 +1,12 @@
 package gui;
 
 import java.awt.Button;
+import java.awt.Checkbox;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.util.ArrayList;
 
+import javax.swing.JCheckBox;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
@@ -30,6 +32,8 @@ public class MainGraphics extends GraphicsProgram
 	private JSlider sliders[] = new JSlider[3];
 	private JTextField sliderLabels[] = new JTextField[3];
 	
+	private JCheckBox checkbox;
+	
 	private ImageData queryImage;
 	private ImageCollection imageCollection = null;
 	
@@ -38,11 +42,14 @@ public class MainGraphics extends GraphicsProgram
 		openButton = new Button("Open Gangnam Style");
 		fileChooser = new JFileChooser();
 		runButton = new Button("Retrieve Similar Images");
+		checkbox = new JCheckBox("CSFD");
 		
 		for(int i=0; i<3; i++)
 		{
 			sliders[i] = new JSlider(0, 60);
-			sliderLabels[i] = new JTextField("" + sliders[i].getValue());			
+			sliders[i].setValue(16);
+			sliderLabels[i] = new JTextField("" + sliders[i].getValue());		
+			sliderLabels[i].setEditable(false);
 		}
 		
 		add(openButton, NORTH);
@@ -51,7 +58,24 @@ public class MainGraphics extends GraphicsProgram
 		
 		initSliders();		
 		
+		UserVariables.setNumOfSimilarImages(3);
+		
+		initCheckbox();
+		add(checkbox, NORTH);
+		
 		addActionListeners();		
+	}
+
+	private void initCheckbox()
+	{
+		checkbox.addChangeListener(new ChangeListener()
+		{			
+			@Override
+			public void stateChanged(ChangeEvent arg0)
+			{
+				UserVariables.USE_CSFD_ALGORITHM = checkbox.isSelected();
+			}
+		});
 	}
 
 	private void initSliders()
@@ -128,9 +152,14 @@ public class MainGraphics extends GraphicsProgram
 			   UserVariables.resetChanged();
 		   }
 		   
-		   ArrayList<ImageData> targets = imageCollection.computeNearestTarget(queryImage);			
+		   ArrayList<ImageData> targets;
+		   if(UserVariables.USE_CSFD_ALGORITHM == true)
+			   targets = imageCollection.computeNearestCFSDTarget(queryImage);
+		   else
+			   targets = imageCollection.computeNearestTarget(queryImage);			
 		   System.out.println("TARGETS");			
-		   displayImages(targets, 6);	
+		   displayImages(targets, UserVariables.getNumOfSimilarImages());
+		   
 	   }	   
 	}
 	

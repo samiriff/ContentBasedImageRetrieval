@@ -92,4 +92,43 @@ public class ImageCollection
 			images.add(new ImageData(fileName + i + ".jpg"));
 		}
 	}
+	
+	
+	
+	//For CFSD	
+	public ArrayList<ImageData> computeNearestCFSDTarget(ImageData queryImage)
+	{
+		TreeMap<Double, ImageData> targets = new TreeMap<Double, ImageData>();
+		
+		for(ImageData image : images)
+		{
+			double sfdDistance = computeSFDDistance(image, queryImage);
+			System.out.println(image.getFileName() + "--> " + sfdDistance);
+			targets.put(sfdDistance, image);
+		}
+		
+		Set<?> set = targets.entrySet();
+		Iterator<?> i = set.iterator();
+		ArrayList<ImageData> sortedTargets = new ArrayList<ImageData>();
+		while(i.hasNext()) 
+		{
+			Map.Entry<?, ?> me = (Map.Entry<?, ?>)i.next();
+			System.out.print(me.getKey() + ": ");
+			//System.out.println(((ImageData) (me.getValue())).getFileName());
+			System.out.println("Red = " + ((ImageData) (me.getValue())).getRedSFD() + "\tGreen = " + ((ImageData) (me.getValue())).getGreenSFD() + "\tBlue = " + ((ImageData) (me.getValue())).getBlueSFD() + "\t" + ((ImageData) (me.getValue())).getFileName());
+			sortedTargets.add((ImageData) me.getValue());
+		}
+
+		return sortedTargets;
+	}
+	
+	private double computeSFDDistance(ImageData image, ImageData queryImage)
+	{
+		double redSFDDistance = Math.abs(image.getRedSFD() - queryImage.getRedSFD());
+		double greenSFDDistance = Math.abs(image.getGreenSFD() - queryImage.getGreenSFD());
+		double blueSFDDistance = Math.abs(image.getBlueSFD() - queryImage.getBlueSFD());
+		
+		return (redSFDDistance + greenSFDDistance + blueSFDDistance) / 3.0;		
+	}
+
 }
