@@ -44,7 +44,7 @@ public class ImageData
 		
 		quantizeColors();		
 				
-		if(UserVariables.USE_CSFD_ALGORITHM)
+		if(UserVariables.useCSFD())
 		{
 			calculateSFD();
 		}
@@ -77,9 +77,18 @@ public class ImageData
 		for(int i=0; i<pixelArray.length; i++)
 			for(int j=0; j<pixelArray[0].length; j++)
 			{
+				//System.out.println(GImage.getRed(pixelArray[i][j]) + "\t" + GImage.getGreen(pixelArray[i][j]) + "\t" + GImage.getBlue(pixelArray[i][j]));
+				
 				quantizedRed[i][j] = (int)(GImage.getRed(pixelArray[i][j]) / (float)(256 / UserVariables.getRedBin()));
 				quantizedGreen[i][j] = (int)(GImage.getGreen(pixelArray[i][j]) / (float)(256 / UserVariables.getGreenBin()));
 				quantizedBlue[i][j] = (int)(GImage.getBlue(pixelArray[i][j]) / (float)(256 / UserVariables.getBlueBin()));
+				
+				//System.out.println(quantizedRed[i][j] + "\t" + quantizedGreen[i][j] + "\t" + quantizedBlue[i][j]);
+				if(UserVariables.useCSFD())
+					convertToHSV(i, j);
+				
+				//System.out.println(quantizedRed[i][j] + "\t" + quantizedGreen[i][j] + "\t" + quantizedBlue[i][j]);
+				
 			}		
 	}
 	
@@ -209,6 +218,40 @@ public class ImageData
 			histogram.put(color, histogram.get(color) + 1);
 		else
 			histogram.put(color, 1);
+	}
+	
+	private void convertToHSV(int i, int j)
+	{
+		 double hue = 0, saturation, value;
+		 double red = quantizedRed[i][j];
+		 double green = quantizedGreen[i][j];
+		 double blue = quantizedBlue[i][j];
+		
+		 red = red * (256.0 / (double)UserVariables.getRedBin()); 
+		 green = green * (256.0 / (double)UserVariables.getGreenBin());
+		 blue = blue * (256.0 / (double)UserVariables.getBlueBin());
+		 double minRGB = Math.min(red, Math.min(green, blue));
+		 double maxRGB = Math.max(red, Math.max(green, blue));
+
+		 // Black-gray-white
+		 if (minRGB == maxRGB) 
+		 {
+			 quantizedRed[i][j] = 0;
+			 quantizedGreen[i][j] = 0;
+			 quantizedBlue[i][j] = (int)(minRGB * 100);
+			 return;
+		 }
+
+		 // Colors other than black-gray-white:
+		 double d = (red == minRGB) ? green - blue : ((blue == minRGB) ? red - green : blue - red);
+		 double h = (red == minRGB) ? 3 : ((blue == minRGB) ? 1 : 5);
+		 hue = 60 * (h - d / (maxRGB - minRGB));
+		 saturation = (maxRGB - minRGB) / maxRGB;
+		 value = maxRGB;
+		 
+		 quantizedRed[i][j] = (int)hue;
+		 quantizedGreen[i][j] = (int)(saturation * 100);
+		 quantizedBlue[i][j] = (int)(value * 100);
 	}
 	
 	public double getRedSFD()

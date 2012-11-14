@@ -73,7 +73,7 @@ public class MainGraphics extends GraphicsProgram
 			@Override
 			public void stateChanged(ChangeEvent arg0)
 			{
-				UserVariables.USE_CSFD_ALGORITHM = checkbox.isSelected();
+				UserVariables.setCSFD(checkbox.isSelected());
 			}
 		});
 	}
@@ -153,7 +153,7 @@ public class MainGraphics extends GraphicsProgram
 		   }
 		   
 		   ArrayList<ImageData> targets;
-		   if(UserVariables.USE_CSFD_ALGORITHM == true)
+		   if(UserVariables.useCSFD() == true)
 			   targets = imageCollection.computeNearestCFSDTarget(queryImage);
 		   else
 			   targets = imageCollection.computeNearestTarget(queryImage);			
