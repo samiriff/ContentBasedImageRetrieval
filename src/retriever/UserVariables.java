@@ -73,5 +73,6 @@ public class UserVariables
 	public static void setCSFD(boolean flag)
 	{
 		USE_CSFD_ALGORITHM = flag;
+		changed = true;
 	}
 }

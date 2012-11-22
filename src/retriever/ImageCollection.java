@@ -89,7 +89,7 @@ public class ImageCollection
 		String fileName = folder + "/" + folder + "_";
 		for(int i = 1; i <= num; i++)
 		{
-			images.add(new ImageData(fileName + i + ".jpg"));
+			images.add(new ImageData(fileName + i + ".jpg", false));
 		}
 	}
 	

@@ -1,12 +1,16 @@
 package retriever;
 
-import java.awt.Canvas;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -32,28 +36,33 @@ public class ImageData
 	private double redSFD;
 	private double greenSFD;
 	private double blueSFD;
+		
+	private Connection connection;
+	private boolean disableDatabase = false;
 	
-	public ImageData(String filename)
+	public ImageData(String filename, boolean disableDB)
 	{
 		this.filename = filename;
+		this.disableDatabase = disableDB;
+		
 		image = new GImage(filename);
 		
 		quantizedRed = new int[image.getPixelArray().length][image.getPixelArray()[0].length];
 		quantizedGreen = new int[image.getPixelArray().length][image.getPixelArray()[0].length];
 		quantizedBlue = new int[image.getPixelArray().length][image.getPixelArray()[0].length];
 		
-		quantizeColors();		
+		quantizeColors();	
 				
 		if(UserVariables.useCSFD())
-		{
-			calculateSFD();
+		{			
+			calculateSFD();			
 		}
 		else
 		{
 			histogram = new HashMap<String, Integer>();
 			generateHistogram();
 		}
-	}
+	}	
 	
 	private void generateHistogram()
 	{
@@ -142,13 +151,25 @@ public class ImageData
 	
 	private void calculateSFD()
 	{
-		generateHistogramsForCFSD();
+		initDBConnection();
 		
-		redSFD = calculateSFD(redHistogram);
-		greenSFD = calculateSFD(greenHistogram);
-		blueSFD = calculateSFD(blueHistogram);
-		
-		//System.out.println("Red = " + redSFD + "\tGreen = " + greenSFD + "\tBlue = " + blueSFD + "\t" + filename);
+		if(retrieveSFDFromDB())
+		{
+			System.out.println("Retrieved From DB");
+			return;
+		}
+		else
+		{			
+			generateHistogramsForCFSD();
+			
+			redSFD = calculateSFD(redHistogram);
+			greenSFD = calculateSFD(greenHistogram);
+			blueSFD = calculateSFD(blueHistogram);
+			
+			//System.out.println("Red = " + redSFD + "\tGreen = " + greenSFD + "\tBlue = " + blueSFD + "\t" + filename);
+			
+			insertSFDinDB();			
+		}		
 	}
 	
 	private double calculateSFD(ArrayList<ColorFrequency> histogram)
@@ -267,5 +288,120 @@ public class ImageData
 	public double getBlueSFD()
 	{
 		return blueSFD;
+	}
+	
+	
+	
+	//Required for DB Access
+	
+	//SET GLOBAL max_allowed_packet=16*1024*1024
+	private void initDBConnection()
+	{
+		if(disableDatabase)
+			return;
+		
+		try
+		{
+			Properties properties = new Properties();
+			properties.put("user", "root");
+			properties.put("password", "");
+			properties.put("characterEncoding", "ISO-8859-1");
+			properties.put("useUnicode", "true");
+			
+			String url = "jdbc:mysql://localhost:3306/image_cfsd";
+
+			//Class.forName("com.mysql.jdbc.Driver").newInstance();
+			connection = DriverManager.getConnection(url, properties);
+		}
+		catch(SQLException e)
+		{
+			System.out.println(e);
+		}
+		
+		System.out.println("DB Connection Established");
+	}
+	
+	private void insertSFDinDB()
+	{
+		if(disableDatabase)
+			return;
+		
+		try
+		{
+			String query = "INSERT INTO ImageData(Image_Path, redSFD, greenSFD, blueSFD) " +
+							"VALUES(?, ?, ?, ?)";
+							
+			
+			//String query = "INSERT INTO ImageData(Image_Path, redSFD, greenSFD, blueSFD) VALUES(\"abc\", 10, 20, 30)";
+					
+			PreparedStatement pstmt = connection.prepareStatement(query);			
+			pstmt.setString(1, filename);
+			pstmt.setDouble(2, redSFD);
+			pstmt.setDouble(3, greenSFD);
+			pstmt.setDouble(4, blueSFD);
+					
+			System.out.println("Result = " + pstmt.executeUpdate());			
+			pstmt.close();		
+			
+			//query = "INSERT INTO quantizedValues VALUES(LAST_INSERT_ID(), 16, 16, 16)";
+			query = "INSERT INTO quantizedValues VALUES(LAST_INSERT_ID(), ?, ?, ?)";
+			pstmt = connection.prepareStatement(query);
+			
+			pstmt.setInt(1, UserVariables.getRedBin());
+			pstmt.setInt(2, UserVariables.getGreenBin());
+			pstmt.setInt(3, UserVariables.getBlueBin());
+			
+			pstmt.executeUpdate();
+			pstmt.close();
+			
+			System.out.println("Inserted into DB");
+		}
+		catch(SQLException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	private boolean retrieveSFDFromDB()
+	{
+		if(disableDatabase)
+			return false;
+		
+		try
+		{
+			String query = "SELECT redSFD, greenSFD, blueSFD " +
+							"FROM ImageData " +
+							"WHERE Image_ID IN " +
+							"(" +
+								"SELECT Image_ID " +
+								"FROM quantizedvalues " +
+								"WHERE qRed = ? AND qGreen = ? AND qBlue = ?" +
+							") " +
+							"AND Image_Path = ?";
+			PreparedStatement pstmt = connection.prepareStatement(query);
+			
+			pstmt.setInt(1, UserVariables.getRedBin());
+			pstmt.setInt(2, UserVariables.getGreenBin());
+			pstmt.setInt(3, UserVariables.getBlueBin());
+			pstmt.setString(4, filename);			
+			
+			//System.out.println("Prepared Statment = " + pstmt);
+			
+			ResultSet rs = pstmt.executeQuery();
+			if(rs.first() == false)
+				return false;		
+			
+			redSFD = rs.getDouble(1);
+			greenSFD = rs.getDouble(2);
+			blueSFD = rs.getDouble(3);			
+			
+			//System.out.println("Red SFD = " + redSFD + "\tGreen SFD = " + greenSFD + "\tBlue SFD = " + blueSFD);
+			return true;
+		}
+		catch(SQLException e)
+		{
+			e.printStackTrace();			
+			return false;
+		}		
 	}
 }

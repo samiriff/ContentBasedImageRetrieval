@@ -39,7 +39,7 @@ public class MainGraphics extends GraphicsProgram
 	
 	public void init()
 	{
-		openButton = new Button("Open Gangnam Style");
+		openButton = new Button("Open");
 		fileChooser = new JFileChooser();
 		runButton = new Button("Retrieve Similar Images");
 		checkbox = new JCheckBox("CSFD");
@@ -127,8 +127,9 @@ public class MainGraphics extends GraphicsProgram
 	        if (returnVal == JFileChooser.APPROVE_OPTION) 
 	        {
 	            File file = fileChooser.getSelectedFile();
+	            System.out.println(file);
 	            System.out.println("Opening: " + file.getAbsolutePath());
-	            queryImage = new ImageData(file.getAbsolutePath());          
+	            queryImage = new ImageData(file.getAbsolutePath(), true);          
 	            
 	            GImage img = new GImage(queryImage.getImage().getImage());
 	            img.scale(0.5);
@@ -165,7 +166,7 @@ public class MainGraphics extends GraphicsProgram
 	
 	private void displayImages(ArrayList<ImageData> targets, int numRequired)
 	{
-		int x = 0, y = (int)queryImage.getImage().getHeight() / 2 + 10;
+		int x = 350, y = (int)queryImage.getImage().getHeight() / 2 + 10;
 		
 		int imgNum = 0;
 		for(ImageData target : targets)
@@ -173,11 +174,11 @@ public class MainGraphics extends GraphicsProgram
 			if(imgNum >= numRequired)
 				break;
 			GImage image = new GImage(target.getImage().getImage());
-			image.scale(0.5, 0.5);
+			image.scale(0.45, 0.45);
 			add(image, x, y);
 			
 			GImage quantizedImage = target.getQuantizedImage();
-			quantizedImage.scale(0.5);
+			quantizedImage.scale(0.45);
 			add(quantizedImage, x, y + image.getHeight() + 10);
 			
 			x += image.getWidth() + 10;
